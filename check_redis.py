@@ -1,3 +1,4 @@
+from operator import index
 import os
 import redis
 import time
@@ -36,12 +37,16 @@ def show_total_numbers(total, current):
     st.title(f"Total: {total:,}")
     st.subheader(f"Wallets: {len(current)}")
 
+def show_all_table(current):
+    df = pd.DataFrame(current.items(), columns=["Wallet", "Balance"])
+    st.table(df)
 
 r = connect_redis()
 machines = r.keys()
 total = 0
 current = {}
-st.title("ABL")
+st.title(f"ABEL")
+st.write(f"last update: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 data_load_state = st.text("Loading data")
 bar = st.progress(0)
@@ -59,6 +64,8 @@ print(current)
 
 show_total_numbers(total, current)
 # show_all_wallets_donut(current)
-st.write(current)
+show_all_table(current)
 
-time.sleep(10)
+# st.write(current)
+
+# time.sleep(10)
