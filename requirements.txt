@@ -19,11 +19,13 @@ debugpy==1.6.2
 decorator==5.1.1
 defusedxml==0.7.1
 Deprecated==1.2.13
+dnspython==2.2.1
 entrypoints==0.4
 executing==0.8.3
 fastjsonschema==2.15.3
 gitdb==4.0.9
 GitPython==3.1.27
+humanize==4.2.3
 idna==3.3
 importlib-metadata==4.12.0
 ipykernel==6.15.1
@@ -64,6 +66,7 @@ pyarrow==8.0.0
 pycparser==2.21
 pydeck==0.7.1
 Pygments==2.12.0
+pymongo==4.1.1
 Pympler==1.0.1
 pyparsing==3.0.9
 pyrsistent==0.18.1
