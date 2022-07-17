@@ -1,96 +1,36 @@
-from operator import index
-import os
-import time
-import datetime
-import humanize
 import streamlit as st
-import plotly.express as px
 import pandas as pd
-from pymongo import MongoClient
-
-def connect_mongo():
-    mongo_client = None
-    mongo_line = os.environ.get("MONGO", None)
-    if mongo_line:
-        print("Mongo validators positive. Connecting to MongoDB")
-        for attempt in range(3):
-            print(f"Connecting to MongoDB. Attempt {attempt +1}")
-            try:
-                mongo_client = MongoClient(mongo_line)
-                print("MongoDB connected successfully")
-                break
-            except Exception:
-                time.sleep(2)
-                print("MongoDB connect failed")
-    return mongo_client
-    
-
-def show_all_wallets_donut(current):
-    fig = px.pie(
-    hole = 0.3,
-    names = current.keys(),
-    values = current.values(),
-)
-    st.plotly_chart(fig)
+import mongo_data
+import time
 
 
-def show_all_table(current):
-    df = pd.DataFrame(current.items(), columns=["Wallet", "Balance"])
-    st.table(df)
+wallets, workers = mongo_data.data_wallets_workers()
 
-def machines_info(mdata):
-    machines_cluster = []
-    machines_primary = []
-    current_time = datetime.datetime.utcnow()
-    for machine in mdata:
-        try:
-            timedelta = humanize.naturaldelta(current_time - machine['update_time'])
-        except Exception:
-            timedelta = "N/A"
-        if machine['cluster']:
-            print(machine)
-            machines_cluster.append({'Machine': machine['_id'], 'State': machine['programmatic'], "Since last update": str(timedelta)})
-            print("Cluster: ", machine['_id'])
-        else:
-            machines_primary.append({'Machine': machine['_id'], 'State': machine['programmatic'], 'Balance': machine['total_balance'], "Since last update": str(timedelta)})
-            print("Primary: ", machine['_id'])
-    print(machines_cluster)
-    df_cluster = pd.DataFrame(machines_cluster)
-    df_primary = pd.DataFrame(machines_primary)
-    return (df_primary, df_cluster)
+df_wallets = pd.DataFrame(wallets)
+df_workers = pd.DataFrame(workers)
+
+df_wallets_count = df_wallets["Machine"].count()
+df_workers_count = df_workers["Machine"].count()
+total = df_wallets["Balance"].sum()
+total_machines = df_wallets["Machine"].count() + df_workers["Machine"].count()
 
 
-
-
-mongo_connection = connect_mongo()
-mdb = mongo_connection.Abel
-mdata = mdb.mining.find()
-df_primary, df_cluster = machines_info(mdata)
-
-
-total = 0
-st.title(f"ABEL")
+st.title("ABEL")
 
 st.write(f"last update: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-total = df_primary['Balance'].sum()
 st.title(f"Total: {total:,}")
-st.write(f"###### Total machines: {df_primary['Machine'].count() + df_cluster['Machine'].count()}")
+st.write(f"###### Total machines: {total_machines}")
 
 col1, col2 = st.columns(2)
 with col1:
-    st.subheader(f"Wallets {df_primary['Machine'].count()}")
-    df_prim_formated = df_primary
+    st.subheader(f"Wallets {df_wallets_count}")
+    st.dataframe(df_wallets)
+    # df_wallets_form = df_wallets
     # df_prim_thousand['Balance'] = df_primary['Balance'].apply('{:,}'.format)
     # df_prim_formated['Machine'] = df_prim_formated['Machine'].split(".")[0]
-    st.dataframe(df_prim_formated)
+    # st.dataframe(df_wallets_form)
 
 with col2:
-    st.subheader(f"Workers {df_cluster['Machine'].count()}")
-    st.dataframe(df_cluster)
-
-# show_all_wallets_donut(current)
-
-# st.write(current)
-
-# time.sleep(10)
+    st.subheader(f"Workers {df_workers_count}")
+    st.dataframe(df_workers)
