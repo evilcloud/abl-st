@@ -31,7 +31,7 @@ def data_to_walletworkers(data):
     for item in data:
         current_time = datetime.datetime.utcnow()
         last_update = item.get("update_time", None)
-        block_height = str(item.get("block_height", " "))
+        block_height = int(item.get("block_height", " "))
         version = item.get("version", " ")
         timedelta = (
             humanize.naturaldelta(current_time - last_update) if last_update else ""
