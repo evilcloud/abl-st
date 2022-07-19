@@ -5,7 +5,7 @@ import time
 
 # from st_aggrid import AgGrid
 
-wallets, workers = mongo_data.data_wallets_workers()
+wallets, workers, found_machines = mongo_data.data_wallets_workers()
 
 df_wallets = pd.DataFrame(wallets)
 df_workers = pd.DataFrame(workers)
@@ -35,6 +35,10 @@ st.write(f"last update: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 st.title(f"Total:")
 st.markdown(f'<p class="big-font">{total:,}</p>', unsafe_allow_html=True)
 st.write(f"###### Total machines: {total_machines}")
+
+if found_machines:
+    st.warning(f"Found {len(found_machines)} lost machines. Total may be inaccurate!")
+    st.table(found_machines)
 
 col1, col2 = st.columns(2)
 with col1:
