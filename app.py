@@ -46,6 +46,17 @@ with col1:
     # df_prim_formated['Machine'] = df_prim_formated['Machine'].split(".")[0]
     # st.dataframe(df_wallets_form)
 
+# df_prog = []
+# df_man = []
+# for entry in df_wallets:
+#     if entry["Programmatic"]:
+#         df_prog.append(df_wallets[entry])
+# print(df_prog)
+# if st.button("Prog: true"):
+#     print([d for d in df_wallets if d["Programmatic"]])
+#     input()
+#     st.dataframe(d_prog)
+
 with col2:
     st.subheader(f"Workers {df_workers_count}")
     st.dataframe(df_workers)

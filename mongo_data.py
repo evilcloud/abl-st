@@ -30,6 +30,7 @@ def data_to_walletworkers(data):
     for item in data:
         current_time = datetime.datetime.utcnow()
         last_update = item.get("update_time", None)
+        block_height = item.get("block_height", None)
         timedelta = (
             humanize.naturaldelta(current_time - last_update) if last_update else ""
         )
@@ -38,6 +39,7 @@ def data_to_walletworkers(data):
             workers.append(
                 {
                     "Machine": item["_id"],
+                    "Block Heigth": item["block_height"],
                     "Since last update": str(timedelta),
                 }
             )
@@ -46,6 +48,7 @@ def data_to_walletworkers(data):
                 {
                     "Machine": item["_id"],
                     "Balance": item["total_balance"],
+                    "Block Heigth": item["block_height"],
                     "Programmatic": item["programmatic"],
                     "Since last update": str(timedelta),
                 }
