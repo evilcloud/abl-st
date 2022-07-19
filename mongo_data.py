@@ -3,6 +3,7 @@ import os
 import sys
 import datetime
 import humanize
+from numpy import block
 import pymongo
 
 
@@ -39,7 +40,7 @@ def data_to_walletworkers(data):
             workers.append(
                 {
                     "Machine": item["_id"],
-                    "Block Heigth": item["block_height"],
+                    "Block Heigth": block_height,
                     "Since last update": str(timedelta),
                 }
             )
@@ -48,7 +49,7 @@ def data_to_walletworkers(data):
                 {
                     "Machine": item["_id"],
                     "Balance": item["total_balance"],
-                    "Block Heigth": item["block_height"],
+                    "Block Heigth": block_height,
                     "Programmatic": item["programmatic"],
                     "Since last update": str(timedelta),
                 }
