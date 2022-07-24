@@ -1,20 +1,26 @@
 from calendar import c
 import streamlit as st
 import pandas as pd
-import mongo_data
 import time
 from st_aggrid import AgGrid
+import processor
+import deta_data
+import os
 
 
-wallets, workers, found_machines, unsafe_machines = mongo_data.data_wallets_workers()
+wallet_db_name = os.environ.get("WALLET_DB_NAME", None)
+ping_db_name = os.environ.get("PING_DB_NAME", None)
 
-df_wallets = pd.DataFrame(wallets)
-df_workers = pd.DataFrame(workers)
+# wallets, workers, found_machines, unsafe_machines = mongo_data.data_wallets_workers()
+wallets = pd.DataFrame(processor.get_wallets())
+ping = pd.DataFrame(processor.get_ping())
+found_machines = 0
+unsafe_machines = 0
 
-df_wallets_count = df_wallets["Machine"].count()
-df_workers_count = df_workers["Machine"].count()
-total = df_wallets["Balance"].sum()
-total_machines = df_wallets["Machine"].count() + df_workers["Machine"].count()
+# df_wallets_count = wallets["Machine"].count()
+# df_workers_count = ping["Machine"].count()
+# total = wallets["Balance"].sum()
+# total_machines = ping["Machine"].count()
 
 st.markdown(
     """
@@ -33,6 +39,10 @@ st.title("ABEL")
 
 st.write(f"last update: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
+total = 0
+total_machines = 0
+df_wallets_count = 0
+df_workers_count = 0
 
 refresh = st.button("Refresh now")
 
@@ -54,9 +64,9 @@ st.subheader(f"Wallets {df_wallets_count}")
 
 
 # st.dataframe(df_wallets)
-AgGrid(df_wallets)
+AgGrid(wallets)
 
 # with col2:
 st.subheader(f"Workers {df_workers_count}")
 # st.dataframe(df_workers)
-AgGrid(df_workers)
+AgGrid(ping)
