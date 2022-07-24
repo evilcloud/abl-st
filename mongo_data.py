@@ -66,8 +66,9 @@ def process_df(data):
         is_worker = item.get("cluster", None)
         entry = {
             "Machine": machine,
-            "Balance": item["total_balance"],
+            "Balance": item.get("total_balance", " "),
             "Programmatic": item.get("programmatic"),
+            "Last block": item.get("block_height", " "),
             "Since last update": str(timedelta),
             "Version": version,
         }

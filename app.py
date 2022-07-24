@@ -52,6 +52,7 @@ if unsafe_machines:
 # with col1:
 st.subheader(f"Wallets {df_wallets_count}")
 
+
 # st.dataframe(df_wallets)
 AgGrid(df_wallets)
 
