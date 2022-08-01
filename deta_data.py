@@ -17,11 +17,11 @@ print("done")
 class Detadb:
     def __init__(self, dbname) -> None:
         self.db = CLIENT.Base(dbname)
-        self.entries = self.db.fetch()
-        self.entries.count = self.entries.count()
-        if self.entries_count:
+        self.entries_obj = self.db.fetch()
+        self.entries = self.entries_obj.items
+        if self.entries_obj.count:
             print(
-                f"Database {dbname} already exists with {self.entries_count} entries..."
+                f"Database {dbname} already exists with {self.entries_obj.count} entries..."
             )
         else:
             print(f"Database {dbname} does not exist. Creating...")

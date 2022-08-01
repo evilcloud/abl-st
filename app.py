@@ -1,72 +1,91 @@
-from calendar import c
+import humanize
 import streamlit as st
-import pandas as pd
-import time
 from st_aggrid import AgGrid
-import processor
-import deta_data
+import requests
+import pandas as pd
+from st_aggrid import AgGrid
 import os
+import sys
+from datetime import datetime, timedelta
 
 
-wallet_db_name = os.environ.get("WALLET_DB_NAME", None)
-ping_db_name = os.environ.get("PING_DB_NAME", None)
-
-# wallets, workers, found_machines, unsafe_machines = mongo_data.data_wallets_workers()
-wallets = pd.DataFrame(processor.get_wallets())
-ping = pd.DataFrame(processor.get_ping())
-found_machines = 0
-unsafe_machines = 0
-
-# df_wallets_count = wallets["Machine"].count()
-# df_workers_count = ping["Machine"].count()
-# total = wallets["Balance"].sum()
-# total_machines = ping["Machine"].count()
-
-st.markdown(
-    """
-<style>
-.big-font {
-    font-size:10vw !important;
-    font-weight:bold !important;
-}
-</style>
-""",
-    unsafe_allow_html=True,
-)
+def connect_to_api(url):
+    response = requests.get(url)
+    if response.status_code != 200:
+        return True, response.status_code
+    return False, response.json()
 
 
-st.title("ABEL")
+DETA_URL = os.environ.get("DETA_URL")
+if not DETA_URL:
+    print("no env var found. Exiting...")
+    sys.exit(1)
+err, mining = connect_to_api(DETA_URL + "mining")
+if err:
+    st.title("Failed to connect to API")
+    st.subheader(f"Error code: {mining}")
+else:
+    st.title(f"Total: {mining['Total balance']:,}")
+    if mining["Unknown machine names"]:
+        st.warning(f"Found wallets that are not present in safe list.")
+        with st.expander("See the list of unknown wallets"):
+            st.table(mining["Unknown machine names"])
+    if mining["Double entries"]:
+        st.warning(f"Found double entries.")
+        with st.expander("See double entries"):
+            st.table(mining["Double entries"])
+    if mining["Safe machines not found"]:
+        st.warning(
+            f'Found {len(mining["Safe machines not found"])} machines from in safe list not present in the current setup.'
+        )
+        with st.expander("See the list of missing wallets"):
+            st.table(mining["Safe machines not found"])
 
-st.write(f"last update: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    st.subheader(
+        f"Total safe wallets in the database: {len(mining['Safe machines'])} of {len(mining['Safe machines list'])}"
+    )
+    online_wallets = len(
+        [
+            wallet
+            for wallet in mining["Safe machines"]
+            if wallet.get("programmatic", None)
+        ]
+    )
+    st.subheader(f"of which programmatic (online) are: {online_wallets}")
+    for entry in mining["Safe machines"]:
+        if entry["updatetime"]:
+            timetime = datetime.strptime(entry["updatetime"], "%Y-%m-%dT%H:%M:%S")
+            since_last_upd = str(humanize.naturaldelta(datetime.utcnow() - timetime))
+        else:
+            since_last_upd = ""
+        entry["since last update"] = since_last_upd
+        del entry["updatetime"]
+        # del entry["update block difference"]
 
-total = 0
-total_machines = 0
-df_wallets_count = 0
-df_workers_count = 0
-
-refresh = st.button("Refresh now")
-
-st.title(f"Total:")
-st.markdown(f'<p class="big-font">{total:,}</p>', unsafe_allow_html=True)
-st.write(f"###### Total machines: {total_machines}")
-
-if found_machines:
-    st.warning(f"Found {len(found_machines)} lost machines. Total may be inaccurate!")
-    st.table(found_machines)
-
-if unsafe_machines:
-    st.warning(f"Found {len(unsafe_machines)} unsafe machines. Not included in Total!")
-    st.table(unsafe_machines)
-
-# col1, col2 = st.columns(2)
-# with col1:
-st.subheader(f"Wallets {df_wallets_count}")
+    df = pd.DataFrame(mining["Safe machines"])
+    st.dataframe(df)
 
 
-# st.dataframe(df_wallets)
-AgGrid(wallets)
-
-# with col2:
-st.subheader(f"Workers {df_workers_count}")
-# st.dataframe(df_workers)
-AgGrid(ping)
+err, ping = connect_to_api(DETA_URL + "ping")
+if err:
+    st.title("Failed to connect to API")
+    st.subheader(f"Error code: {ping}")
+else:
+    over_one_hour = []
+    utcnow = datetime.utcnow()
+    st.header(f"Pinging live wallets")
+    st.subheader(f"Total live machines: {len(ping['raw data'])}")
+    for entry in ping["raw data"]:
+        if entry["time"]:
+            timetime = datetime.strptime(entry["time"], "%Y-%m-%dT%H:%M:%S")
+            entry["since last ping"] = humanize.naturaldelta(utcnow - timetime)
+            if (utcnow - timetime) > timedelta(hours=1):
+                over_one_hour.append(entry)
+    df = pd.DataFrame(ping["raw data"])
+    st.dataframe(df)
+    if over_one_hour:
+        st.warning(
+            f"Found {len(over_one_hour)} wallets that have not pinged in more than 1 hour."
+        )
+        with st.expander("See serevers lagging one hour or more"):
+            st.dataframe(over_one_hour)
