@@ -83,7 +83,7 @@ def replace_updatetime_updatediff(data):
 
 def clean_wrong_update_amount(data):
     for item in data:
-        update_amount = item['update amount']
+        update_amount = item["update amount"]
         if item["balance"] == update_amount:
             update_amount = " "
     return data
@@ -142,8 +142,3 @@ def process_df(data):
             found_machines.append(machine)
 
     return wallets, workers, found_machines, unsafe_machines
-
-
-
-if __name__ == "__main__":
-    data_wallets_workers()

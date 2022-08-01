@@ -72,6 +72,9 @@ if err:
     st.subheader(f"Error code: {ping}")
 else:
     over_one_hour = []
+    over_12_hours = []
+    over_one_day = []
+    over_one_week = []
     utcnow = datetime.utcnow()
     st.header(f"Pinging live wallets")
     st.subheader(f"Total live machines: {len(ping['raw data'])}")
@@ -81,11 +84,51 @@ else:
             entry["since last ping"] = humanize.naturaldelta(utcnow - timetime)
             if (utcnow - timetime) > timedelta(hours=1):
                 over_one_hour.append(entry)
+            if (utcnow - timetime) > timedelta(hours=12):
+                over_12_hours.append(entry)
+            if (utcnow - timetime) > timedelta(hours=24):
+                over_one_day.append(entry)
+            if (utcnow - timetime) > timedelta(days=7):
+                over_one_week.append(entry)
     df = pd.DataFrame(ping["raw data"])
     st.dataframe(df)
-    if over_one_hour:
-        st.warning(
-            f"Found {len(over_one_hour)} wallets that have not pinged in more than 1 hour."
-        )
-        with st.expander("See serevers lagging one hour or more"):
-            st.dataframe(over_one_hour)
+    lag_range = st.select_slider(
+        "Select data lag range", options=["1h", "12h", "1d", "1w"]
+    )
+
+    if lag_range == "1h":
+        if over_one_hour:
+            st.warning(
+                f"Found {len(over_one_hour)} wallets that have not pinged in more than 1 hour."
+            )
+            with st.expander("See serevers lagging one hour or over"):
+                st.dataframe(over_one_hour)
+        else:
+            st.write("No wallets lagging one hour or over.")
+    if lag_range == "12h":
+        if over_12_hours:
+            st.warning(
+                f"Found {len(over_12_hours)} wallets that have not pinged in more than 12 hours."
+            )
+            with st.expander("See serevers lagging 12 hours or over"):
+                st.dataframe(over_12_hours)
+        else:
+            st.write("No wallets lagging 12 hours or over.")
+    if lag_range == "1d":
+        if over_one_day:
+            st.warning(
+                f"Found {len(over_one_day)} wallets that have not pinged in more than 1 day."
+            )
+            with st.expander("See serevers lagging one day or over"):
+                st.dataframe(over_one_day)
+        else:
+            st.write("No wallets lagging one day or over.")
+    if lag_range == "1w":
+        if over_one_week:
+            st.warning(
+                f"Found {len(over_one_week)} wallets that have not pinged in more than 1 week."
+            )
+            with st.expander("See serevers lagging 1 weeek or over"):
+                st.dataframe(over_one_week)
+        else:
+            st.write("No wallets lagging 1 week or over.")
