@@ -18,14 +18,24 @@ def connect_to_api(url):
 
 DETA_URL = os.environ.get("DETA_URL")
 if not DETA_URL:
-    print("no env var found. Exiting...")
+    st.error("No environment variable found. Terminating...")
+    st.stop()
     sys.exit(1)
+
 err, mining = connect_to_api(DETA_URL + "mining")
 if err:
     st.title("Failed to connect to API")
     st.subheader(f"Error code: {mining}")
 else:
     st.title(f"Total: {mining['Total balance']:,}")
+
+    # just a little fun
+    _, col1, _ = st.columns(3)
+    with col1:
+        snow = st.button("Press here to begin")
+    if snow:
+        st.snow()
+
     if mining["Unknown machine names"]:
         st.warning(f"Found wallets that are not present in safe list.")
         with st.expander("See the list of unknown wallets"):
@@ -104,16 +114,6 @@ else:
         options=[x for x in time_lag_options.keys() if time_lag_data[x]],
     )
 
-    # if lag_range:
-    #     for lag_distance in time_lag_options:
-    #         if time_lag_data[lag_distance]:
-    #             st.warning(
-    #                 f"Found {len(time_lag_data[lag_distance])} machines that have been offline for {lag_distance} or over"
-    #             )
-    #             with st.expander(f"See the list of lagging machines"):
-    #                 st.dataframe(time_lag_data[lag_distance])
-    st.snow()
-
     if time_lag_data[lag_choice]:
         st.warning(
             f"Found {len(time_lag_data[lag_choice])} machines that have been offline for {lag_choice} or over"
@@ -122,3 +122,9 @@ else:
             st.dataframe(time_lag_data[lag_choice])
     else:
         st.success(f"No machines found that have been offline")
+
+    _, col2, _ = st.columns(3)
+    with col2:
+        baloons = st.button("The end")
+    if baloons:
+        st.balloons()
