@@ -71,10 +71,20 @@ if err:
     st.title("Failed to connect to API")
     st.subheader(f"Error code: {ping}")
 else:
-    over_one_hour = []
-    over_12_hours = []
-    over_one_day = []
-    over_one_week = []
+    # Prep for the slider at the bottom of the page
+    time_lag_options = {
+        "10 minutes": timedelta(minutes=10),
+        "1 hour": timedelta(hours=1),
+        "6 hours": timedelta(hours=6),
+        "12 hours": timedelta(hours=12),
+        "1 day": timedelta(days=1),
+        "2 days": timedelta(days=2),
+        "1 week": timedelta(weeks=1),
+    }
+    time_lag_data = {}
+    for key in time_lag_options:
+        time_lag_data[key] = []
+
     utcnow = datetime.utcnow()
     st.header(f"Pinging live wallets")
     st.subheader(f"Total live machines: {len(ping['raw data'])}")
@@ -82,53 +92,33 @@ else:
         if entry["time"]:
             timetime = datetime.strptime(entry["time"], "%Y-%m-%dT%H:%M:%S")
             entry["since last ping"] = humanize.naturaldelta(utcnow - timetime)
-            if (utcnow - timetime) > timedelta(hours=1):
-                over_one_hour.append(entry)
-            if (utcnow - timetime) > timedelta(hours=12):
-                over_12_hours.append(entry)
-            if (utcnow - timetime) > timedelta(hours=24):
-                over_one_day.append(entry)
-            if (utcnow - timetime) > timedelta(days=7):
-                over_one_week.append(entry)
+            for lag, delta in time_lag_options.items():
+                if utcnow - timetime > delta:
+                    time_lag_data[lag] += [entry]
+
     df = pd.DataFrame(ping["raw data"])
     st.dataframe(df)
-    lag_range = st.select_slider(
-        "Select data lag range", options=["1h", "12h", "1d", "1w"]
+
+    lag_choice = st.select_slider(
+        "Select data lag range",
+        options=[x for x in time_lag_options.keys() if time_lag_data[x]],
     )
 
-    if lag_range == "1h":
-        if over_one_hour:
-            st.warning(
-                f"Found {len(over_one_hour)} wallets that have not pinged in more than 1 hour."
-            )
-            with st.expander("See serevers lagging one hour or over"):
-                st.dataframe(over_one_hour)
-        else:
-            st.write("No wallets lagging one hour or over.")
-    if lag_range == "12h":
-        if over_12_hours:
-            st.warning(
-                f"Found {len(over_12_hours)} wallets that have not pinged in more than 12 hours."
-            )
-            with st.expander("See serevers lagging 12 hours or over"):
-                st.dataframe(over_12_hours)
-        else:
-            st.write("No wallets lagging 12 hours or over.")
-    if lag_range == "1d":
-        if over_one_day:
-            st.warning(
-                f"Found {len(over_one_day)} wallets that have not pinged in more than 1 day."
-            )
-            with st.expander("See serevers lagging one day or over"):
-                st.dataframe(over_one_day)
-        else:
-            st.write("No wallets lagging one day or over.")
-    if lag_range == "1w":
-        if over_one_week:
-            st.warning(
-                f"Found {len(over_one_week)} wallets that have not pinged in more than 1 week."
-            )
-            with st.expander("See serevers lagging 1 weeek or over"):
-                st.dataframe(over_one_week)
-        else:
-            st.write("No wallets lagging 1 week or over.")
+    # if lag_range:
+    #     for lag_distance in time_lag_options:
+    #         if time_lag_data[lag_distance]:
+    #             st.warning(
+    #                 f"Found {len(time_lag_data[lag_distance])} machines that have been offline for {lag_distance} or over"
+    #             )
+    #             with st.expander(f"See the list of lagging machines"):
+    #                 st.dataframe(time_lag_data[lag_distance])
+    st.snow()
+
+    if time_lag_data[lag_choice]:
+        st.warning(
+            f"Found {len(time_lag_data[lag_choice])} machines that have been offline for {lag_choice} or over"
+        )
+        with st.expander(f"See the list of lagging machines"):
+            st.dataframe(time_lag_data[lag_choice])
+    else:
+        st.success(f"No machines found that have been offline")
