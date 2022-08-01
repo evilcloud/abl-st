@@ -1,7 +1,5 @@
 import os
 import sys
-import datetime
-import humanize
 from numpy import block
 from deta import Deta
 
