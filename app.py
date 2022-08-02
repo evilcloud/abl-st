@@ -101,8 +101,8 @@ else:
     st.header(f"Pinging live wallets")
     st.subheader(f"Total live machines: {len(ping['raw data'])}")
     for entry in ping["raw data"]:
-        if cpu := entry.get("CPU", None) and type(cpu) == float:
-            cpu = int(cpu)
+        # if cpu := entry.get("CPU", None) and type(cpu) == float:
+        #     cpu = int(cpu)
         if entry["time"]:
             timetime = datetime.strptime(entry["time"], "%Y-%m-%dT%H:%M:%S")
             entry["since last ping"] = humanize.naturaldelta(utcnow - timetime)
