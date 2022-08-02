@@ -30,11 +30,11 @@ else:
     st.title(f"Total: {mining['Total balance']:,}")
 
     # just a little fun
-    _, col1, _ = st.columns(3)
-    with col1:
-        snow = st.button("Press here to begin")
-    if snow:
-        st.snow()
+    # _, col1, _ = st.columns(3)
+    # with col1:
+    #     snow = st.button("Press here to begin")
+    # if snow:
+    #     st.snow()
 
     if mining["Unknown machine names"]:
         st.warning(f"Found wallets that are not present in safe list.")
@@ -83,6 +83,8 @@ if err:
 else:
     # Prep for the slider at the bottom of the page
     time_lag_options = {
+        "10 seconds": timedelta(seconds=10),
+        "1 minute": timedelta(minutes=1),
         "10 minutes": timedelta(minutes=10),
         "1 hour": timedelta(hours=1),
         "6 hours": timedelta(hours=6),
